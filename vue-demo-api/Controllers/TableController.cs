@@ -22,7 +22,7 @@ namespace vui_demo_api.Controllers
         [HttpGet()]
         public async Task<Table[]> Get()
         {
-            List<Table> tables = await _appDbContext.Tables.ToListAsync();
+            List<Table> tables = await _appDbContext.Tables.OrderBy(table => table.CreatedAt).ToListAsync();
             return tables.ToArray();
         }
 
@@ -49,7 +49,7 @@ namespace vui_demo_api.Controllers
 
         [SwaggerOperation(Summary = "Create a new table")]
         [HttpPost()]
-        public ActionResult<Table> Post(Table table)
+        public async Task<ActionResult<Table>> Post(Table table)
         {
             try
             {
@@ -57,13 +57,16 @@ namespace vui_demo_api.Controllers
                 _appDbContext.TableHeaders.AddRange(table.Headers);
                 _appDbContext.TableValues.AddRange(table.Values);
                 _appDbContext.SaveChanges();
+
+                Table? newTable = await _appDbContext.Tables.FirstOrDefaultAsync(t => t.Id == table.Id);
+
+                return newTable;
             }
             catch (Exception e)
             {
                 _logger.LogInformation(e.Message);
                 return BadRequest();
             }
-            return table;
         }
 
         //TODO: updating existing tables
