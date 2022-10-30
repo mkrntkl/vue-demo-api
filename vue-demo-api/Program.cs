@@ -11,7 +11,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "allowOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:8080");
+            policy
+                .WithOrigins("*")
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         });
 });
 
@@ -43,9 +46,20 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+app.UseRouting();
 app.UseCors("allowOrigins");
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapGet("/table",
+        context => context.Response.WriteAsync("table"))
+        .RequireCors("allowOrigins");
+
+    endpoints.MapControllers()
+             .RequireCors("allowOrigins");
+});
+
+//app.MapControllers();
 
 app.Run();
